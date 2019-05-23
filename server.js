@@ -28,6 +28,23 @@ server.get("/accounts", async (req, res) => {
   }
 });
 
+server.get("/accounts/:id", validateAccountId, async (req, res) => {
+  try {
+    const { id } = await db.findById(req.params.id);
+    if (id) {
+      res.status(200).json(req.user);
+    } else {
+      res
+        .status(400)
+        .json({ message: "account with this ID could not be located." });
+    }
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "couldnt retrieve user with that specifired ID" });
+  }
+});
+
 server.post("/accounts", async (req, res) => {
   try {
     const addAccount = await db.add(req.body);
@@ -57,7 +74,7 @@ server.delete("/accounts/:id", async (req, res) => {
   }
 });
 
-server.put("/accounts/:id", async (req, res) => {
+server.put("/accounts/:id", validateAccountId, async (req, res) => {
   try {
     const updatedAccount = await db.update(req.params.id, req.body);
     if (updatedAccount) {
@@ -73,7 +90,7 @@ server.put("/accounts/:id", async (req, res) => {
 async function validateAccountId(req, res, next) {
   try {
     const { id } = req.params;
-    const accountId = await users.findById(id);
+    const accountId = await db.findById(id);
     if (accountId) {
       req.user = accountId;
       next();
